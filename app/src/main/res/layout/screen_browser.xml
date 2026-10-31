@@ -1,0 +1,14 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="18dp">
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Browser" android:textColor="@color/moonix_navy" android:textSize="23sp" android:textStyle="bold" />
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Open a site in your browser, then paste a link into Moonix to inspect supported media." android:textColor="@color/moonix_muted" android:textSize="13sp" />
+    <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="18dp" android:hint="https://" app:boxBackgroundMode="outline" app:boxCornerRadiusBottomEnd="14dp" app:boxCornerRadiusBottomStart="14dp" app:boxCornerRadiusTopEnd="14dp" app:boxCornerRadiusTopStart="14dp">
+        <com.google.android.material.textfield.TextInputEditText android:id="@+id/browser_url" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="textUri" android:maxLines="1" />
+    </com.google.android.material.textfield.TextInputLayout>
+    <com.google.android.material.button.MaterialButton android:id="@+id/browser_open" android:layout_width="match_parent" android:layout_height="50dp" android:layout_marginTop="10dp" android:text="Open in browser" android:textAllCaps="false" app:backgroundTint="@color/moonix_purple" app:cornerRadius="14dp" />
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="22dp" android:padding="16dp" android:background="@drawable/card_surface" android:text="Moonix only downloads content from supported sources when the user is authorized. DRM and access controls are not bypassed." android:textColor="@color/moonix_muted" android:textSize="13sp" />
+</LinearLayout>

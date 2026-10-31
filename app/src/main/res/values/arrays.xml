@@ -1,0 +1,52 @@
+<resources>
+    <string-array name="quality_options">
+        <item>720p</item>
+        <item>1080p</item>
+        <item>480p</item>
+        <item>360p</item>
+        <item>Best available</item>
+    </string-array>
+    <string-array name="quality_values">
+        <item>720</item>
+        <item>1080</item>
+        <item>480</item>
+        <item>360</item>
+        <item>best</item>
+    </string-array>
+    <string-array name="movie_quality_options">
+        <item>Ask every time</item>
+        <item>Best (Auto)</item>
+        <item>1080p</item>
+        <item>720p</item>
+        <item>480p</item>
+        <item>360p</item>
+    </string-array>
+    <string-array name="movie_quality_values">
+        <item>ask</item>
+        <item>Best (Auto)</item>
+        <item>1080p</item>
+        <item>720p</item>
+        <item>480p</item>
+        <item>360p</item>
+    </string-array>
+    <string-array name="max_download_options">
+        <item>Unlimited</item>
+        <item>1 at a time</item>
+        <item>2 at a time</item>
+        <item>3 at a time</item>
+        <item>5 at a time</item>
+        <item>10 at a time</item>
+    </string-array>
+    <integer-array name="max_download_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>5</item>
+        <item>10</item>
+    </integer-array>
+    <string-array name="download_location_options">
+        <item>Downloads</item>
+        <item>Movies</item>
+    </string-array>
+</resources>

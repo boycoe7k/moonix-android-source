@@ -1,0 +1,14 @@
+<resources>
+    <style name="Theme.Moonix" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">@color/moonix_purple</item>
+        <item name="colorPrimaryVariant">@color/moonix_navy</item>
+        <item name="colorSecondary">@color/moonix_pink</item>
+        <item name="android:statusBarColor">@color/moonix_white</item>
+        <item name="android:navigationBarColor">@color/moonix_white</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:fontFamily">sans</item>
+        <item name="android:colorAccent">@color/moonix_pink</item>
+        <item name="android:windowBackground">@color/moonix_grey</item>
+    </style>
+</resources>

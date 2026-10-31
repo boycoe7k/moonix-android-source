@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">Moonix</string>
+    <string name="app_tagline">Download. Discover. Enjoy.</string>
+    <string name="api_base_url">https://video-download-api-uohi.onrender.com/</string>
+    <string name="supported_sources">YouTube, TikTok, Facebook and Instagram links, where downloading is permitted</string>
+</resources>

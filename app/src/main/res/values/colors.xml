@@ -1,0 +1,13 @@
+<resources>
+    <color name="moonix_white">#FFFFFF</color>
+    <color name="moonix_lavender">#F1EDFF</color>
+    <color name="moonix_navy">#10182D</color>
+    <color name="moonix_pink">#F45B91</color>
+    <color name="moonix_crimson">#E83D55</color>
+    <color name="moonix_purple">#9874F5</color>
+    <color name="moonix_blue">#75B9F5</color>
+    <color name="moonix_grey">#F5F6FA</color>
+    <color name="moonix_muted">#758096</color>
+    <color name="moonix_line">#E7E9F0</color>
+    <color name="moonix_green">#1FA67A</color>
+</resources>

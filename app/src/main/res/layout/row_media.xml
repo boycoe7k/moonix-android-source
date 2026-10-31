@@ -1,0 +1,38 @@
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="9dp"
+    app:cardBackgroundColor="@color/moonix_white"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="1dp"
+    app:strokeColor="@color/moonix_line"
+    app:strokeWidth="1dp">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="10dp">
+        <ImageView
+            android:id="@+id/media_thumbnail"
+            android:layout_width="82dp"
+            android:layout_height="68dp"
+            android:background="@color/moonix_lavender"
+            android:contentDescription="Media thumbnail"
+            android:scaleType="centerCrop" />
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+            <TextView android:id="@+id/media_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:maxLines="2" android:ellipsize="end" android:textColor="@color/moonix_navy" android:textSize="14sp" android:textStyle="bold" />
+            <TextView android:id="@+id/media_meta" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:maxLines="1" android:ellipsize="end" android:textColor="@color/moonix_muted" android:textSize="11sp" />
+            <LinearLayout android:id="@+id/media_actions" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:orientation="horizontal">
+                <com.google.android.material.button.MaterialButton android:id="@+id/media_video" style="@style/Widget.MaterialComponents.Button.TextButton" android:layout_width="wrap_content" android:layout_height="34dp" android:minWidth="0dp" android:paddingStart="8dp" android:paddingEnd="8dp" android:text="Video" android:textAllCaps="false" android:textSize="11sp" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/media_audio" style="@style/Widget.MaterialComponents.Button.TextButton" android:layout_width="wrap_content" android:layout_height="34dp" android:minWidth="0dp" android:paddingStart="8dp" android:paddingEnd="8dp" android:text="Audio" android:textAllCaps="false" android:textSize="11sp" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
