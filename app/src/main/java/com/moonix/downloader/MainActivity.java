@@ -62,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
     private final ArrayDeque<DownloadTask> pendingDownloads = new ArrayDeque<>();
     private int activeDownloads = 0;
     private boolean filesAudio = false;
+    private boolean browserScreenOpen = false;
     private boolean activityDestroyed = false;
 
     private static final class DownloadTask {
@@ -81,6 +82,9 @@ public class MainActivity extends AppCompatActivity {
             showTab(item.getItemId());
             return true;
         });
+        navigation.setOnItemReselectedListener(item -> {
+            if (browserScreenOpen) showTab(item.getItemId());
+        });
         navigation.setSelectedItemId(R.id.nav_home);
         requestNotificationsIfNeeded();
     }
@@ -93,6 +97,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showTab(int tabId) {
+        browserScreenOpen = false;
         clearSearchAnimations();
         activeStatus = null;
         contentFrame.animate().cancel();
@@ -100,13 +105,11 @@ public class MainActivity extends AppCompatActivity {
         contentFrame.setTranslationY(6f * getResources().getDisplayMetrics().density);
         contentFrame.animate().alpha(1f).translationY(0f).setDuration(190).start();
         if (tabId == R.id.nav_home) {
-            showSearchScreen("Explore", "Search YouTube or paste a link you are allowed to save.", "Search or detect link");
+            showSearchScreen("Explore", "Search or paste a link, or open Browser.", "Search or detect link");
         } else if (tabId == R.id.nav_download) {
             showSearchScreen("Download", "Paste a supported link to inspect it, or search for a video.", "Search or detect link");
         } else if (tabId == R.id.nav_movies) {
             showSearchScreen("Movies", "Search movies, view details, and choose a download quality.", "Search movies");
-        } else if (tabId == R.id.nav_browser) {
-            showBrowserScreen();
         } else if (tabId == R.id.nav_files) {
             showFilesScreen();
         } else if (tabId == R.id.nav_profile) {
@@ -131,6 +134,14 @@ public class MainActivity extends AppCompatActivity {
         }
         MaterialButton action = view.findViewById(R.id.btn_action);
         action.setText(actionLabel);
+        MaterialButton openBrowser = view.findViewById(R.id.btn_open_browser);
+        if ("Explore".equals(title)) {
+            openBrowser.setVisibility(View.VISIBLE);
+            openBrowser.setOnClickListener(v -> {
+                tapFeedback(v);
+                showBrowserScreen();
+            });
+        }
         MaterialButton manageDownloads = view.findViewById(R.id.btn_open_downloads);
         if ("Download".equals(title)) {
             manageDownloads.setVisibility(View.VISIBLE);
@@ -626,6 +637,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showBrowserScreen() {
+        browserScreenOpen = true;
         View view = LayoutInflater.from(this).inflate(R.layout.screen_browser, contentFrame, false);
         contentFrame.removeAllViews();
         contentFrame.addView(view);

@@ -32,7 +32,7 @@ The backend’s configured platform list is YouTube, TikTok, Facebook, and Insta
 
 The settings screen includes VDL video quality choices (360p through 1080p plus Best available), a preferred movie quality or Ask every time, a public Downloads/Movies destination, Wi-Fi-only transfers, roaming permission, completion notifications, and an optional confirmation prompt. Audio extraction is MP3; its bitrate is fixed by the current VDL API, which does not expose an app-selectable audio bitrate. The maximum concurrent download selector is user-controlled and defaults to **Unlimited**; it offers 1, 2, 3, 5, and 10 active transfers as optional choices. There are no subscription screens, paid tiers, or app plan-based download caps. If a finite concurrency is selected, pending items wait in a FIFO queue while the app process remains alive; transfers already handed to Android DownloadManager continue under Android's background download service.
 
-The Files tab reads local video/audio media with runtime permission. The Browser tab opens links in the device’s browser rather than embedding a downloader into arbitrary websites.
+The Files tab reads local video/audio media with runtime permission. The Home screen includes a Browser shortcut that opens links in the device’s browser rather than embedding a downloader into arbitrary websites. The bottom navigation stays within Material’s five-destination maximum.
 
 ## UI polish
 
