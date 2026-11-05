@@ -156,7 +156,7 @@ public class SearchActivity extends AppCompatActivity {
             if (term.trim().isEmpty()) continue;
             MaterialButton chip = new MaterialButton(this, null, com.google.android.material.R.attr.materialButtonOutlinedStyle);
             chip.setText(term);
-            chip.setTextAllCaps(false);
+            chip.setAllCaps(false);
             chip.setMaxLines(1);
             chip.setOnClickListener(v -> { queryInput.setText(term); queryInput.setSelection(queryInput.length()); submitQuery(); });
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
