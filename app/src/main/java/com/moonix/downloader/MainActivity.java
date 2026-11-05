@@ -6,6 +6,9 @@ import android.content.ContentUris;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -13,6 +16,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -63,7 +67,9 @@ public class MainActivity extends AppCompatActivity {
     private int activeDownloads = 0;
     private boolean filesAudio = false;
     private boolean browserScreenOpen = false;
+    private boolean returnFromDownloads = false;
     private boolean activityDestroyed = false;
+    private HomeFeedAdapter homeFeedAdapter;
 
     private static final class DownloadTask {
         final String label;
@@ -89,6 +95,14 @@ public class MainActivity extends AppCompatActivity {
         requestNotificationsIfNeeded();
     }
 
+    @Override protected void onResume() {
+        super.onResume();
+        if (returnFromDownloads && navigation != null) {
+            returnFromDownloads = false;
+            navigation.setSelectedItemId(R.id.nav_home);
+        }
+    }
+
     private void requestNotificationsIfNeeded() {
         boolean notificationsEnabled = getSharedPreferences("moonix_settings", MODE_PRIVATE).getBoolean("notify_complete", true);
         if (notificationsEnabled && Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
@@ -105,9 +119,10 @@ public class MainActivity extends AppCompatActivity {
         contentFrame.setTranslationY(6f * getResources().getDisplayMetrics().density);
         contentFrame.animate().alpha(1f).translationY(0f).setDuration(190).start();
         if (tabId == R.id.nav_home) {
-            showSearchScreen("Explore", "Search or paste a link, or open Browser.", "Search or detect link");
+            showHomeScreen();
         } else if (tabId == R.id.nav_download) {
-            showSearchScreen("Download", "Paste a supported link to inspect it, or search for a video.", "Search or detect link");
+            returnFromDownloads = true;
+            startActivity(new Intent(this, DownloadsActivity.class));
         } else if (tabId == R.id.nav_movies) {
             showSearchScreen("Movies", "Search movies, view details, and choose a download quality.", "Search movies");
         } else if (tabId == R.id.nav_files) {
@@ -115,6 +130,118 @@ public class MainActivity extends AppCompatActivity {
         } else if (tabId == R.id.nav_profile) {
             showProfileScreen();
         }
+    }
+
+    private void showHomeScreen() {
+        View view = LayoutInflater.from(this).inflate(R.layout.screen_home, contentFrame, false);
+        contentFrame.removeAllViews();
+        contentFrame.addView(view);
+        browserScreenOpen = false;
+
+        view.findViewById(R.id.home_search_bar).setOnClickListener(v -> {
+            tapFeedback(v);
+            startActivity(new Intent(this, SearchActivity.class));
+        });
+        view.findViewById(R.id.home_network_settings).setOnClickListener(v -> {
+            try { startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS)); }
+            catch (Exception e) { toast("Open Android Settings to check your network."); }
+        });
+        view.findViewById(R.id.home_network_banner).setVisibility(hasNetworkConnection() ? View.GONE : View.VISIBLE);
+
+        view.findViewById(R.id.home_youtube).setOnClickListener(v ->
+                startActivity(new Intent(this, SearchActivity.class)
+                        .putExtra(SearchActivity.EXTRA_INITIAL_QUERY, "popular videos")));
+        view.findViewById(R.id.home_tiktok).setOnClickListener(v -> openExternal("https://www.tiktok.com/"));
+        view.findViewById(R.id.home_facebook).setOnClickListener(v -> openExternal("https://www.facebook.com/"));
+        view.findViewById(R.id.home_instagram).setOnClickListener(v -> openExternal("https://www.instagram.com/"));
+        view.findViewById(R.id.home_sites).setOnClickListener(v -> showBrowserScreen());
+
+        TextView feedTitle = view.findViewById(R.id.home_feed_title);
+        TextView feedStatus = view.findViewById(R.id.home_feed_status);
+        TextView feedSource = view.findViewById(R.id.home_feed_source);
+        RecyclerView feedList = view.findViewById(R.id.home_feed_list);
+        feedList.setLayoutManager(new LinearLayoutManager(this));
+        homeFeedAdapter = new HomeFeedAdapter(new HomeFeedAdapter.Actions() {
+            @Override public void onPlay(MediaItem item) {
+                if (item.url.isEmpty()) toast("This result does not include a playable YouTube link.");
+                else openExternal(item.url);
+            }
+            @Override public void onDownload(MediaItem item) { beginDownload(item, "video"); }
+        });
+        HomeFeedAdapter adapter = homeFeedAdapter;
+        feedList.setAdapter(adapter);
+
+        Runnable showPopularVideos = () -> {
+            selectHomeFilter(view, R.id.home_filter_all);
+            feedTitle.setText("Popular videos");
+            feedSource.setText("YouTube search results");
+            loadHomeFeed("popular videos", adapter, feedStatus);
+        };
+        view.findViewById(R.id.home_filter_all).setOnClickListener(v -> showPopularVideos.run());
+        view.findViewById(R.id.home_filter_videos).setOnClickListener(v -> {
+            selectHomeFilter(view, R.id.home_filter_videos);
+            feedTitle.setText("Popular videos");
+            feedSource.setText("YouTube search results");
+            loadHomeFeed("popular videos", adapter, feedStatus);
+        });
+        view.findViewById(R.id.home_filter_music).setOnClickListener(v -> {
+            selectHomeFilter(view, R.id.home_filter_music);
+            feedTitle.setText("Popular music");
+            feedSource.setText("YouTube search results");
+            loadHomeFeed("popular music videos", adapter, feedStatus);
+        });
+        view.findViewById(R.id.home_filter_movies).setOnClickListener(v -> navigation.setSelectedItemId(R.id.nav_movies));
+        showPopularVideos.run();
+    }
+
+    private boolean hasNetworkConnection() {
+        ConnectivityManager manager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+        if (manager == null) return false;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Network network = manager.getActiveNetwork();
+            NetworkCapabilities capabilities = network == null ? null : manager.getNetworkCapabilities(network);
+            return capabilities != null && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+        }
+        android.net.NetworkInfo info = manager.getActiveNetworkInfo();
+        return info != null && info.isConnected();
+    }
+
+    private void selectHomeFilter(View homeView, int selectedId) {
+        int[] ids = {R.id.home_filter_all, R.id.home_filter_videos, R.id.home_filter_music};
+        for (int id : ids) {
+            MaterialButton button = homeView.findViewById(id);
+            boolean selected = id == selectedId;
+            button.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
+                    ContextCompat.getColor(this, selected ? R.color.moonix_navy : R.color.moonix_white)));
+            button.setTextColor(ContextCompat.getColor(this, selected ? R.color.moonix_white : R.color.moonix_navy));
+        }
+    }
+
+    private void loadHomeFeed(String query, HomeFeedAdapter adapter, TextView status) {
+        adapter.submit(new ArrayList<>());
+        status.setText("Loading real YouTube search results…");
+        ApiClient.search(this, query, new ApiClient.Callback() {
+            @Override public void onSuccess(JSONObject response) {
+                JSONArray results = ApiClient.array(response, "results");
+                List<MediaItem> items = new ArrayList<>();
+                for (int i = 0; i < results.length(); i++) {
+                    JSONObject object = results.optJSONObject(i);
+                    if (object != null) items.add(MediaItem.fromSearch(object));
+                }
+                adapter.submit(items);
+                status.setText(items.isEmpty() ? "No YouTube search results were returned." :
+                        items.size() + " real results for “" + query + "” · not a trending feed.");
+            }
+            @Override public void onError(String message) {
+                adapter.submit(new ArrayList<>());
+                status.setText("Could not load YouTube search results: " + message);
+            }
+        });
+    }
+
+    private void openExternal(String address) {
+        try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(address))); }
+        catch (Exception e) { toast("No app is available to open this link."); }
     }
 
     private void showSearchScreen(String title, String subtitle, String actionLabel) {
@@ -683,7 +810,14 @@ public class MainActivity extends AppCompatActivity {
             adapter.submit(new ArrayList<>());
             return;
         }
-        Uri collection = filesAudio ? MediaStore.Audio.Media.EXTERNAL_CONTENT_URI : MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+        Uri collection;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            collection = filesAudio
+                    ? MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
+                    : MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL);
+        } else {
+            collection = filesAudio ? MediaStore.Audio.Media.EXTERNAL_CONTENT_URI : MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+        }
         String[] projection = {MediaStore.MediaColumns._ID, MediaStore.MediaColumns.DISPLAY_NAME,
                 MediaStore.MediaColumns.TITLE, MediaStore.MediaColumns.DURATION};
         List<MediaItem> items = new ArrayList<>();
@@ -694,7 +828,7 @@ public class MainActivity extends AppCompatActivity {
                 int nameCol = cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME);
                 int titleCol = cursor.getColumnIndex(MediaStore.MediaColumns.TITLE);
                 int durationCol = cursor.getColumnIndex(MediaStore.MediaColumns.DURATION);
-                while (cursor.moveToNext() && items.size() < 100) {
+                while (cursor.moveToNext()) {
                     long id = cursor.getLong(idCol);
                     String name = nameCol >= 0 ? cursor.getString(nameCol) : "";
                     String title = titleCol >= 0 ? cursor.getString(titleCol) : "";
@@ -722,12 +856,11 @@ public class MainActivity extends AppCompatActivity {
 
     private void openLocalFile(MediaItem item) {
         try {
-            String mime = filesAudio ? "audio/*" : "video/*";
-            Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setDataAndType(Uri.parse(item.url), mime);
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            Intent intent = new Intent(this, filesAudio ? MusicPlayerActivity.class : VideoPlayerActivity.class);
+            intent.putExtra(PlaybackContract.EXTRA_URI, item.url);
+            intent.putExtra(PlaybackContract.EXTRA_TITLE, item.title);
             startActivity(intent);
-        } catch (Exception e) { toast("No compatible media player is installed."); }
+        } catch (Exception e) { toast("Could not open this media file."); }
     }
 
     private void showProfileScreen() {

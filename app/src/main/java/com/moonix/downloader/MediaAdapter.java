@@ -60,7 +60,7 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.Holder> {
             holder.audio.setVisibility(View.GONE);
             holder.video.setOnClickListener(v -> { if (item.hasResource) actions.onVideo(item); });
         } else if (item.local) {
-            holder.video.setText("Open");
+            holder.video.setText("Play");
             holder.video.setEnabled(true);
             holder.audio.setVisibility(View.GONE);
             holder.video.setOnClickListener(v -> actions.onVideo(item));

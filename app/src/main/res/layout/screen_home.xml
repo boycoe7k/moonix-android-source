@@ -1,0 +1,269 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/moonix_grey"
+    android:orientation="vertical">
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/home_search_bar"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="16dp"
+        android:clickable="true"
+        android:focusable="true"
+        app:cardBackgroundColor="@color/moonix_white"
+        app:cardCornerRadius="17dp"
+        app:cardElevation="1dp"
+        app:strokeColor="@color/moonix_line"
+        app:strokeWidth="1dp">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="14dp"
+            android:paddingEnd="16dp">
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:contentDescription="Search"
+                android:src="@android:drawable/ic_menu_search"
+                android:tint="@color/moonix_navy" />
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:text="Search or enter URL"
+                android:textColor="@color/moonix_muted"
+                android:textSize="16sp" />
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:contentDescription="Open search"
+                android:src="@drawable/icon_nav_browser"
+                android:tint="@color/moonix_navy" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:clipToPadding="false"
+        android:fillViewport="false"
+        android:scrollbars="none">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp">
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/home_filter_all"
+                style="@style/Widget.MaterialComponents.Button"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:minWidth="64dp"
+                android:text="All"
+                android:textAllCaps="false"
+                android:textColor="@color/moonix_white"
+                android:textSize="13sp"
+                app:backgroundTint="@color/moonix_navy"
+                app:cornerRadius="20dp" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/home_filter_videos"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:layout_marginStart="8dp"
+                android:text="Videos"
+                android:textAllCaps="false"
+                android:textColor="@color/moonix_navy"
+                android:textSize="13sp"
+                app:cornerRadius="20dp" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/home_filter_music"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:layout_marginStart="8dp"
+                android:text="Music"
+                android:textAllCaps="false"
+                android:textColor="@color/moonix_navy"
+                android:textSize="13sp"
+                app:cornerRadius="20dp" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/home_filter_movies"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:layout_marginStart="8dp"
+                android:text="Movies"
+                android:textAllCaps="false"
+                android:textColor="@color/moonix_navy"
+                android:textSize="13sp"
+                app:cornerRadius="20dp" />
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/home_network_banner"
+        android:layout_width="match_parent"
+        android:layout_height="42dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="16dp"
+        android:visibility="gone"
+        app:cardBackgroundColor="#FFF0F0"
+        app:cardCornerRadius="8dp"
+        app:cardElevation="0dp">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Current network is unavailable"
+                android:textColor="@color/moonix_crimson"
+                android:textSize="13sp" />
+            <TextView
+                android:id="@+id/home_network_settings"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:text="Settings  ›"
+                android:textColor="@color/moonix_blue"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:clipToPadding="false"
+        android:scrollbars="none">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp">
+            <LinearLayout
+                android:id="@+id/home_youtube"
+                android:layout_width="76dp"
+                android:layout_height="82dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical">
+                <ImageView android:layout_width="48dp" android:layout_height="48dp" android:contentDescription="YouTube" android:src="@drawable/brand_youtube" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="YouTube" android:textColor="@color/moonix_navy" android:textSize="12sp" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/home_tiktok"
+                android:layout_width="76dp"
+                android:layout_height="82dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical">
+                <ImageView android:layout_width="48dp" android:layout_height="48dp" android:contentDescription="TikTok" android:src="@drawable/brand_tiktok" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="TikTok" android:textColor="@color/moonix_navy" android:textSize="12sp" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/home_facebook"
+                android:layout_width="76dp"
+                android:layout_height="82dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical">
+                <ImageView android:layout_width="48dp" android:layout_height="48dp" android:contentDescription="Facebook" android:src="@drawable/brand_facebook" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Facebook" android:textColor="@color/moonix_navy" android:textSize="12sp" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/home_instagram"
+                android:layout_width="76dp"
+                android:layout_height="82dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical">
+                <ImageView android:layout_width="48dp" android:layout_height="48dp" android:contentDescription="Instagram" android:src="@drawable/brand_instagram" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Instagram" android:textColor="@color/moonix_navy" android:textSize="12sp" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/home_sites"
+                android:layout_width="76dp"
+                android:layout_height="82dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical">
+                <ImageView android:layout_width="48dp" android:layout_height="48dp" android:contentDescription="Sites" android:src="@drawable/icon_nav_browser" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Sites" android:textColor="@color/moonix_navy" android:textSize="12sp" />
+            </LinearLayout>
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="6dp">
+        <TextView
+            android:id="@+id/home_feed_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Popular videos"
+            android:textColor="@color/moonix_navy"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+        <TextView
+            android:id="@+id/home_feed_source"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="YouTube search results"
+            android:textColor="@color/moonix_muted"
+            android:textSize="11sp" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/home_feed_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="4dp"
+        android:text="Loading YouTube search results…"
+        android:textColor="@color/moonix_muted"
+        android:textSize="12sp" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/home_feed_list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="12dp" />
+</LinearLayout>
