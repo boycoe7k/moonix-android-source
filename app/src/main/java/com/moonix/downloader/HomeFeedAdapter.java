@@ -45,8 +45,11 @@ public final class HomeFeedAdapter extends RecyclerView.Adapter<HomeFeedAdapter.
         MediaItem item = items.get(position);
         holder.title.setText(item.title);
         String creator = item.creator.isEmpty() ? "YouTube" : item.creator;
-        String duration = item.duration.isEmpty() ? "" : " · " + item.duration;
-        holder.creator.setText(creator + duration + " · YouTube search result");
+        String details = creator;
+        if (!item.views.isEmpty()) details += " · " + item.views;
+        if (!item.published.isEmpty()) details += " · " + item.published;
+        if (item.views.isEmpty() && item.published.isEmpty()) details += " · YouTube search result";
+        holder.creator.setText(details);
         if (item.duration.isEmpty()) {
             holder.duration.setVisibility(View.GONE);
         } else {
@@ -59,9 +62,12 @@ public final class HomeFeedAdapter extends RecyclerView.Adapter<HomeFeedAdapter.
                 .placeholder(R.drawable.card_surface)
                 .error(R.drawable.card_surface)
                 .into(holder.thumbnail);
-        holder.play.setOnClickListener(v -> actions.onPlay(item));
+        View.OnClickListener playAction = v -> actions.onPlay(item);
+        holder.play.setOnClickListener(playAction);
+        holder.playOverlay.setOnClickListener(playAction);
+        holder.thumbnail.setOnClickListener(playAction);
         holder.download.setOnClickListener(v -> actions.onDownload(item));
-        holder.itemView.setOnClickListener(v -> actions.onPlay(item));
+        holder.itemView.setOnClickListener(playAction);
     }
 
     @Override public int getItemCount() {
@@ -74,6 +80,7 @@ public final class HomeFeedAdapter extends RecyclerView.Adapter<HomeFeedAdapter.
         final TextView creator;
         final TextView duration;
         final MaterialButton play;
+        final MaterialButton playOverlay;
         final MaterialButton download;
 
         Holder(@NonNull View itemView) {
@@ -83,6 +90,7 @@ public final class HomeFeedAdapter extends RecyclerView.Adapter<HomeFeedAdapter.
             creator = itemView.findViewById(R.id.home_video_creator);
             duration = itemView.findViewById(R.id.home_video_duration);
             play = itemView.findViewById(R.id.home_video_play);
+            playOverlay = itemView.findViewById(R.id.home_video_play_overlay);
             download = itemView.findViewById(R.id.home_video_download);
         }
     }

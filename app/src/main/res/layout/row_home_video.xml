@@ -14,14 +14,33 @@
         android:orientation="vertical">
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="196dp"
-            android:background="@color/moonix_lavender">
+            android:layout_height="210dp"
+            android:background="@color/moonix_lavender"
+            android:clickable="true"
+            android:focusable="true">
             <ImageView
                 android:id="@+id/home_video_thumbnail"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:contentDescription="Video thumbnail"
                 android:scaleType="centerCrop" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/home_video_play_overlay"
+                style="@style/Widget.MaterialComponents.Button"
+                android:layout_width="54dp"
+                android:layout_height="54dp"
+                android:layout_gravity="center"
+                android:contentDescription="Play in Moonix"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:padding="0dp"
+                app:backgroundTint="#DDF5F5F7"
+                app:cornerRadius="27dp"
+                app:icon="@drawable/icon_play"
+                app:iconGravity="textStart"
+                app:iconTint="@color/moonix_navy" />
             <TextView
                 android:id="@+id/home_video_duration"
                 android:layout_width="wrap_content"
@@ -61,7 +80,7 @@
                 android:layout_height="40dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="More video actions"
-                android:src="@android:drawable/ic_menu_more"
+                android:src="@drawable/icon_more"
                 android:visibility="gone" />
         </LinearLayout>
         <TextView
@@ -86,11 +105,11 @@
                 style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="38dp"
-                android:text="Play on YouTube"
+                android:text="Play in Moonix"
                 android:textAllCaps="false"
                 android:textColor="@color/moonix_navy"
                 android:textSize="12sp"
-                app:icon="@android:drawable/ic_media_play"
+                app:icon="@drawable/icon_play"
                 app:iconTint="@color/moonix_navy" />
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/home_video_download"

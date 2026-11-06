@@ -24,7 +24,7 @@ A Java/XML Android source project for CodeAssist or Android Studio.
 - Completed files are passed to Android `DownloadManager`, which stores them in the selected public Downloads or Movies folder and handles transfer progress/notifications.
 - The profile screen allows a custom API URL and optional `x-api-key`.
 
-The Movies tab uses the Play Mate deployment at `https://movie-lab.zone.id`. Search calls its `/api-omegatech/api/movie/MovieBox-pro?action=search` proxy. A movie card opens catalog details; choosing Download calls `/api/sources/{subjectId}` with movie parameters and offers direct HTTPS MP4 quality choices. HLS playlists are excluded because Android DownloadManager cannot save them as standalone MP4 files. The Movies tab replaces the dedicated Music tab; audio extraction remains available from supported VDL search results.
+The Movies filter on Home uses the Play Mate deployment at `https://movie-lab.zone.id`. Search calls its `/api-omegatech/api/movie/MovieBox-pro?action=search` proxy. A movie card opens catalog details; choosing Download calls `/api/sources/{subjectId}` with movie parameters and offers direct HTTPS MP4 quality choices. HLS playlists are excluded because Android DownloadManager cannot save them as standalone MP4 files. Audio extraction remains available from supported VDL search results.
 
 The backend’s configured platform list is YouTube, TikTok, Facebook, and Instagram. Search is YouTube-only. A source may reject a request or restrict downloading; use downloads only for media you own or are authorized to save. This app does not bypass DRM or access controls. The VDL service does not expose pause/resume controls for its extraction jobs; file transfer is handled by Android DownloadManager.
 
@@ -32,17 +32,17 @@ The backend’s configured platform list is YouTube, TikTok, Facebook, and Insta
 
 The settings screen includes VDL video quality choices (360p through 1080p plus Best available), a preferred movie quality or Ask every time, a public Downloads/Movies destination, Wi-Fi-only transfers, roaming permission, completion notifications, and an optional confirmation prompt. Audio extraction is MP3; its bitrate is fixed by the current VDL API, which does not expose an app-selectable audio bitrate. The maximum concurrent download selector is user-controlled and defaults to **Unlimited**; it offers 1, 2, 3, 5, and 10 active transfers as optional choices. There are no subscription screens, paid tiers, or app plan-based download caps. If a finite concurrency is selected, pending items wait in a FIFO queue while the app process remains alive; transfers already handed to Android DownloadManager continue under Android's background download service.
 
-The Home screen follows the supplied video-app layout: a separate tap-to-open Search page with up to 20 recent queries, platform shortcuts, a network-status banner, and large video cards. Its default cards come from the VDL API’s real YouTube keyword search for “popular videos”; they are search results, not a live/personalized trending feed. Search opens in its own Activity, so the main bottom navigation is not resized above the keyboard. The Videos, Music, and Movies filters run searches or open the movie catalog; platform shortcuts open the corresponding site.
+The Home screen follows the supplied reference layout: the search/social/category header scrolls with the video feed, while the bottom bar stays fixed. Tapping the search field opens a separate Search activity with search history. Its default cards come from the VDL API’s real YouTube keyword search for “popular videos”; they are search results, not a live/personalized trending feed. Shorts and Music filters run keyword searches; Movies opens the Play Mate catalog; personal Subscriptions are marked unavailable until a YouTube account is connected. YouTube results open in Moonix's embedded YouTube player (some videos may disallow embedding).
 
-The Files tab queries the aggregate external MediaStore volume on Android 10+ and lists all accessible device video/audio items without a 100-item cap. Local video and music files open in Moonix’s own player Activities. The Download tab opens a dedicated DownloadManager activity that shows download status and allows completed audio/video files to play in Moonix. The Browser shortcut opens links externally rather than embedding a downloader into arbitrary websites.
+The five bottom destinations are Home, Shorts, Game, My Files, and Me. My Files has Videos, Music, and Downloads filters: it queries the aggregate external MediaStore volume on Android 10+ without a 100-item cap and merges Android DownloadManager records, including queued/running/paused/completed states. Users can cancel active system downloads and open completed media in Moonix's players. Local music uses embedded metadata/artwork when available; local video uses device thumbnails where Android can decode them. The Browser shortcut opens links externally rather than embedding a downloader into arbitrary websites.
 
 ## UI polish
 
-All in-app navigation, settings, media-placeholder, platform, and launcher icons are PNG assets. Tab changes use a short fade-and-slide transition, main actions have light press feedback, and custom Moonix Lottie animations show the idle/empty search state and API loading state.
+Custom navigation, platform shortcuts, Home search/play actions, music transport controls, and launcher artwork use PNG assets. Tab changes use a short fade-and-slide transition, main actions have light press feedback, and custom Moonix Lottie animations show the idle/empty search state and API loading state. Android status/navigation insets are handled on the redesigned app shell and standalone Search/player activities.
 
 ## Assets
 
-`brand_youtube.png`, `brand_instagram.png`, and `brand_facebook.png` are PNG platform marks sourced from Wikimedia Commons file pages. `brand_tiktok.png` is a TikTok PNG from StickPNG. They are displayed only as source/platform identifiers; the respective marks remain owned by their brand holders. `moonix_logo.png` and launcher icons are original Moonix lettermark artwork generated for this project.
+`brand_youtube.png`, `brand_instagram.png`, and `brand_facebook.png` are PNG platform marks sourced from Wikimedia Commons file pages. `brand_tiktok.png` is a TikTok PNG from StickPNG. `brand_whatsapp.png` is a project-generated green chat/phone icon used as a shortcut, not an official WhatsApp mark. These assets are displayed only as source/platform identifiers; the respective marks remain owned by their brand holders. `moonix_logo.png` and launcher icons are original Moonix lettermark artwork generated for this project.
 
 Sources:
 - YouTube: https://commons.wikimedia.org/wiki/File:YouTube_full-color_icon_(2017).svg
@@ -54,7 +54,7 @@ Sources:
 
 - `app/src/main/java/com/moonix/downloader/`: API client, media model/adapter, and activity.
 - `MOVIE_API_NOTES.md`: verified Play Mate API host, route shape, and source references.
-- `app/src/main/res/layout/`: activity, search, browser, files, profile, and list-row XML.
+- `app/src/main/res/layout/`: activity, scrolling Home, separate Search, browser, Files, profile, game shortcuts, player, download sheets, and list-row XML.
 - `app/src/main/res/raw/moonix_search.json` and `moonix_loading.json`: original Lottie search and loading animations; Lottie Android 6.7.1 renders them natively.
 - `LOTTIE_SOURCE_NOTES.md`: official library setup and version references.
 - `app/src/main/res/drawable-nodpi/`: PNG navigation/action icons, platform logos, and Moonix logo.

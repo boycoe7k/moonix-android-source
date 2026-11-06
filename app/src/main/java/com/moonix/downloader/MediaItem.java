@@ -20,16 +20,32 @@ public class MediaItem {
     public final String releaseDate;
     public final String genre;
     public final String rating;
+    public final String views;
+    public final String published;
 
     public MediaItem(String id, String title, String creator, String duration, String thumbnail,
                      String url, String platform, boolean local) {
         this(id, title, creator, duration, thumbnail, url, platform, local,
-                false, true, "", "", "", "", "");
+                false, true, "", "", "", "", "", "", "");
+    }
+
+    public MediaItem(String id, String title, String creator, String duration, String thumbnail,
+                     String url, String platform, boolean local, String views, String published) {
+        this(id, title, creator, duration, thumbnail, url, platform, local,
+                false, true, "", "", "", "", "", views, published);
     }
 
     public MediaItem(String id, String title, String creator, String duration, String thumbnail,
                      String url, String platform, boolean local, boolean movie, boolean hasResource,
                      String detailPath, String description, String releaseDate, String genre, String rating) {
+        this(id, title, creator, duration, thumbnail, url, platform, local, movie, hasResource,
+                detailPath, description, releaseDate, genre, rating, "", "");
+    }
+
+    public MediaItem(String id, String title, String creator, String duration, String thumbnail,
+                     String url, String platform, boolean local, boolean movie, boolean hasResource,
+                     String detailPath, String description, String releaseDate, String genre, String rating,
+                     String views, String published) {
         this.id = id == null ? "" : id;
         this.title = title == null || title.isEmpty() ? "Untitled media" : title;
         this.creator = creator == null ? "" : creator;
@@ -45,20 +61,25 @@ public class MediaItem {
         this.releaseDate = releaseDate == null ? "" : releaseDate;
         this.genre = genre == null ? "" : genre;
         this.rating = rating == null ? "" : rating;
+        this.views = views == null ? "" : views;
+        this.published = published == null ? "" : published;
     }
 
     public static MediaItem fromSearch(JSONObject json) {
         String videoId = json.optString("videoId", json.optString("id", ""));
         String mediaUrl = json.optString("url", videoId.isEmpty() ? "" : "https://www.youtube.com/watch?v=" + videoId);
         return new MediaItem(videoId, json.optString("title"), json.optString("channel"),
-                json.optString("duration"), json.optString("thumbnail"), mediaUrl, "YouTube", false);
+                json.optString("duration"), json.optString("thumbnail"), mediaUrl, "YouTube", false,
+                json.optString("views"), json.optString("published"));
     }
 
     public static MediaItem fromInfo(JSONObject json) {
         return new MediaItem(json.optString("id"), json.optString("title"),
                 json.optString("uploader"), json.optString("duration"),
                 json.optString("thumbnail"), json.optString("webpageUrl"),
-                json.optString("platform"), false);
+                json.optString("platform"), false,
+                json.optString("view_count", json.optString("views", "")),
+                json.optString("upload_date", json.optString("published", "")));
     }
 
     public static MediaItem fromMovie(JSONObject json) {
@@ -74,7 +95,6 @@ public class MediaItem {
         String genre = json.optString("genre", "");
         String rating = json.optString("imdbRatingValue", json.optString("rating", ""));
         String metaRating = rating.isEmpty() || "0".equals(rating) ? "" : "IMDb " + rating;
-        String country = json.optString("countryName", "");
         String hasResourceValue = json.optString("hasResource", "true");
         boolean hasResource = json.optBoolean("hasResource", !"false".equalsIgnoreCase(hasResourceValue));
         return new MediaItem(id, title, year, genre, cover, "", metaRating, false,

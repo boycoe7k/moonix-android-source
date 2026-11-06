@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:fillViewport="true"
+    android:background="@color/moonix_white"
+    android:clipToPadding="false">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="22dp"
+        android:paddingTop="18dp"
+        android:paddingEnd="22dp"
+        android:paddingBottom="24dp">
+
+        <View android:layout_width="42dp" android:layout_height="4dp" android:layout_gravity="center_horizontal" android:layout_marginBottom="20dp" android:background="@color/moonix_line" />
+
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
+            <ImageView android:id="@+id/download_preview" android:layout_width="92dp" android:layout_height="68dp" android:contentDescription="Media preview" android:scaleType="centerCrop" android:background="@color/moonix_lavender" />
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="14dp" android:layout_weight="1" android:orientation="vertical">
+                <TextView android:id="@+id/download_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:ellipsize="end" android:maxLines="2" android:textColor="@color/moonix_navy" android:textSize="17sp" android:textStyle="bold" />
+                <TextView android:id="@+id/download_meta" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:textColor="@color/moonix_muted" android:textSize="12sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <TextView android:id="@+id/download_warning" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:background="@color/moonix_lavender" android:padding="11dp" android:textColor="@color/moonix_navy" android:textSize="12sp" android:visibility="gone" />
+        <TextView android:id="@+id/download_size" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:textColor="@color/moonix_muted" android:textSize="13sp" android:visibility="gone" />
+
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="18dp" android:text="File name" android:textColor="@color/moonix_navy" android:textSize="14sp" android:textStyle="bold" />
+        <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:hint="File name" style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+            <com.google.android.material.textfield.TextInputEditText android:id="@+id/download_filename" android:layout_width="match_parent" android:layout_height="wrap_content" android:imeOptions="actionDone" android:inputType="textCapSentences" android:maxLines="1" android:textColor="@color/moonix_navy" android:textSize="14sp" />
+        </com.google.android.material.textfield.TextInputLayout>
+        <TextView android:id="@+id/rename_action" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="end" android:padding="8dp" android:text="Rename" android:textColor="@color/moonix_purple" android:textSize="13sp" android:textStyle="bold" />
+
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Save to" android:textColor="@color/moonix_navy" android:textSize="14sp" android:textStyle="bold" />
+        <com.google.android.material.button.MaterialButtonToggleGroup android:id="@+id/download_directory_group" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:orientation="horizontal" app:singleSelection="true" app:selectionRequired="true">
+            <com.google.android.material.button.MaterialButton android:id="@+id/directory_downloads" style="@style/Widget.MaterialComponents.Button.OutlinedButton" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Downloads" android:textAllCaps="false" android:textSize="12sp" />
+            <com.google.android.material.button.MaterialButton android:id="@+id/directory_movies" style="@style/Widget.MaterialComponents.Button.OutlinedButton" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Movies" android:textAllCaps="false" android:textSize="12sp" />
+        </com.google.android.material.button.MaterialButtonToggleGroup>
+
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="Download as" android:textColor="@color/moonix_navy" android:textSize="14sp" android:textStyle="bold" />
+        <com.google.android.material.button.MaterialButtonToggleGroup android:id="@+id/download_type_group" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:orientation="horizontal" app:singleSelection="true" app:selectionRequired="true">
+            <com.google.android.material.button.MaterialButton android:id="@+id/type_video" style="@style/Widget.MaterialComponents.Button.OutlinedButton" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Video" android:textAllCaps="false" />
+            <com.google.android.material.button.MaterialButton android:id="@+id/type_audio" style="@style/Widget.MaterialComponents.Button.OutlinedButton" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Music" android:textAllCaps="false" />
+        </com.google.android.material.button.MaterialButtonToggleGroup>
+
+        <TextView android:id="@+id/quality_label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="14dp" android:text="Video quality" android:textColor="@color/moonix_navy" android:textSize="14sp" android:textStyle="bold" />
+        <RadioGroup android:id="@+id/video_quality_group" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:orientation="horizontal">
+            <RadioButton android:id="@+id/quality_best" android:layout_width="wrap_content" android:layout_height="wrap_content" android:buttonTint="@color/moonix_purple" android:checked="true" android:text="Best" android:textColor="@color/moonix_navy" android:textSize="12sp" />
+            <RadioButton android:id="@+id/quality_1080" android:layout_width="wrap_content" android:layout_height="wrap_content" android:buttonTint="@color/moonix_purple" android:text="1080p" android:textColor="@color/moonix_navy" android:textSize="12sp" />
+            <RadioButton android:id="@+id/quality_720" android:layout_width="wrap_content" android:layout_height="wrap_content" android:buttonTint="@color/moonix_purple" android:text="720p" android:textColor="@color/moonix_navy" android:textSize="12sp" />
+            <RadioButton android:id="@+id/quality_480" android:layout_width="wrap_content" android:layout_height="wrap_content" android:buttonTint="@color/moonix_purple" android:text="480p" android:textColor="@color/moonix_navy" android:textSize="12sp" />
+            <RadioButton android:id="@+id/quality_360" android:layout_width="wrap_content" android:layout_height="wrap_content" android:buttonTint="@color/moonix_purple" android:text="360p" android:textColor="@color/moonix_navy" android:textSize="12sp" />
+        </RadioGroup>
+        <RadioGroup android:id="@+id/audio_quality_group" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:orientation="horizontal" android:visibility="gone">
+            <RadioButton android:id="@+id/quality_audio_best" android:layout_width="wrap_content" android:layout_height="wrap_content" android:buttonTint="@color/moonix_purple" android:checked="true" android:text="Best available audio" android:textColor="@color/moonix_navy" android:textSize="13sp" />
+        </RadioGroup>
+
+        <com.google.android.material.button.MaterialButton android:id="@+id/download_confirm" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:backgroundTint="@color/moonix_purple" android:text="Download" android:textAllCaps="false" android:textColor="@color/moonix_white" android:textSize="16sp" android:textStyle="bold" app:cornerRadius="14dp" />
+    </LinearLayout>
+</ScrollView>

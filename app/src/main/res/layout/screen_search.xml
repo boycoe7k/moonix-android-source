@@ -7,6 +7,17 @@
     android:paddingEnd="16dp"
     android:paddingTop="12dp">
 
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/screen_back"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="38dp"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:text="‹ Home"
+        android:textAllCaps="false"
+        android:visibility="gone" />
+
     <TextView
         android:id="@+id/screen_title"
         android:layout_width="match_parent"

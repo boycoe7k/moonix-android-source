@@ -11,8 +11,8 @@ import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.content.Context;
-import android.database.Cursor;
 import android.widget.LinearLayout;
+import android.content.Intent;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,7 +28,6 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 /** Separate full-screen search surface, independent of MainActivity's bottom navigation. */
 public class SearchActivity extends AppCompatActivity {
@@ -42,11 +41,13 @@ public class SearchActivity extends AppCompatActivity {
     private TextView status;
     private View loading;
     private MediaAdapter adapter;
+    private final List<MediaItem> visibleItems = new ArrayList<>();
     private boolean finished;
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
+        SystemInsets.apply(this);
         queryInput = findViewById(R.id.search_query_input);
         status = findViewById(R.id.search_status);
         loading = findViewById(R.id.search_loading);
@@ -56,13 +57,35 @@ public class SearchActivity extends AppCompatActivity {
             @Override public void onVideo(MediaItem item) { startMediaDownload(item, "video"); }
             @Override public void onAudio(MediaItem item) { startMediaDownload(item, "audio"); }
             @Override public void onDetails(MediaItem item) {
-                if (isActive()) Toast.makeText(SearchActivity.this, "Details are not available in search.", Toast.LENGTH_SHORT).show();
+                if (item == null || !isActive()) return;
+                if (item.movie) { toast("Movie details are not available in search."); return; }
+                openResult(item);
             }
         });
         results.setAdapter(adapter);
+        results.addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {
+            @Override public void onChildViewAttachedToWindow(View view) {
+                view.setOnClickListener(v -> {
+                    if (!isActive()) return;
+                    RecyclerView.ViewHolder holder = results.getChildViewHolder(v);
+                    int position = holder.getBindingAdapterPosition();
+                    if (position < 0 || position >= visibleItems.size()) return;
+                    MediaItem item = visibleItems.get(position);
+                    if (item.movie) toast("Movie details are not available in search.");
+                    else openResult(item);
+                });
+            }
+            @Override public void onChildViewDetachedFromWindow(View view) { }
+        });
         findViewById(R.id.search_back).setOnClickListener(v -> finish());
         MaterialButton submit = findViewById(R.id.search_submit);
         submit.setOnClickListener(v -> submitQuery());
+        findViewById(R.id.search_clear_history).setOnClickListener(v -> {
+            if (!isActive()) return;
+            getSharedPreferences(HISTORY_PREFS, MODE_PRIVATE).edit().remove(HISTORY_KEY).apply();
+            refreshHistory();
+        });
+        addSearchChips();
         queryInput.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_GO) {
                 submitQuery();
@@ -84,12 +107,14 @@ public class SearchActivity extends AppCompatActivity {
         String value = queryInput.getText() == null ? "" : queryInput.getText().toString().trim();
         if (value.isEmpty()) {
             setState("Enter a search phrase or paste a supported video link.", false);
+            visibleItems.clear();
             adapter.submit(new ArrayList<>());
             return;
         }
         hideKeyboard();
         saveHistory(value);
         refreshHistory();
+        visibleItems.clear();
         adapter.submit(new ArrayList<>());
         setState("Connecting to VDL API…", true);
         if (ApiClient.isSupportedUrl(value)) {
@@ -100,6 +125,7 @@ public class SearchActivity extends AppCompatActivity {
                     MediaItem withUrl = new MediaItem(item.id, item.title, item.creator, item.duration,
                             item.thumbnail, item.url.isEmpty() ? value : item.url, item.platform, false);
                     List<MediaItem> found = new ArrayList<>(); found.add(withUrl);
+                    visibleItems.clear(); visibleItems.addAll(found);
                     adapter.submit(found);
                     setState("Media detected · choose Video or Audio to download.", false);
                 }
@@ -120,6 +146,7 @@ public class SearchActivity extends AppCompatActivity {
                         JSONObject object = array.optJSONObject(i);
                         if (object != null) items.add(MediaItem.fromSearch(object));
                     }
+                    visibleItems.clear(); visibleItems.addAll(items);
                     adapter.submit(items);
                     setState(items.isEmpty() ? "No results found." : items.size() + " results · choose Video or Audio to download.", false);
                 }
@@ -131,6 +158,19 @@ public class SearchActivity extends AppCompatActivity {
         }
     }
 
+    private void openResult(MediaItem item) {
+        if (!isActive() || item == null || item.movie) return;
+        Intent intent = new Intent(this, VideoPlayerActivity.class);
+        intent.putExtra(PlaybackContract.EXTRA_TITLE, item.title);
+        intent.putExtra(PlaybackContract.EXTRA_VIDEO_ID, item.id);
+        intent.putExtra(PlaybackContract.EXTRA_CREATOR, item.creator);
+        intent.putExtra(PlaybackContract.EXTRA_THUMBNAIL, item.thumbnail);
+        intent.putExtra(PlaybackContract.EXTRA_DURATION, item.duration);
+        intent.putExtra(PlaybackContract.EXTRA_VIEWS, item.views);
+        intent.putExtra(PlaybackContract.EXTRA_PUBLISHED, item.published);
+        intent.putExtra(PlaybackContract.EXTRA_URI, item.url);
+        startActivity(intent);
+    }
     private void saveHistory(String query) {
         SharedPreferences prefs = getSharedPreferences(HISTORY_PREFS, MODE_PRIVATE);
         JSONArray existing;
@@ -147,6 +187,7 @@ public class SearchActivity extends AppCompatActivity {
 
     private void refreshHistory() {
         LinearLayout container = findViewById(R.id.search_history_items);
+        if (container == null || !isActive()) return;
         container.removeAllViews();
         JSONArray history;
         try { history = new JSONArray(getSharedPreferences(HISTORY_PREFS, MODE_PRIVATE).getString(HISTORY_KEY, "[]")); }
@@ -166,12 +207,34 @@ public class SearchActivity extends AppCompatActivity {
         }
         findViewById(R.id.search_history_title).setVisibility(history.length() == 0 ? View.GONE : View.VISIBLE);
         findViewById(R.id.search_history_scroll).setVisibility(history.length() == 0 ? View.GONE : View.VISIBLE);
+        findViewById(R.id.search_clear_history).setVisibility(history.length() == 0 ? View.GONE : View.VISIBLE);
     }
 
+    private void addSearchChips() {
+        LinearLayout hot = findViewById(R.id.search_hot_items);
+        if (hot == null) return;
+        String[] terms = {"music videos", "movie trailers", "Minecraft gameplay", "football highlights", "lofi music", "cooking videos"};
+        for (String term : terms) {
+            MaterialButton chip = new MaterialButton(this, null, com.google.android.material.R.attr.materialButtonOutlinedStyle);
+            chip.setText(term);
+            chip.setAllCaps(false);
+            chip.setMaxLines(1);
+            chip.setOnClickListener(v -> { if (!isActive()) return; queryInput.setText(term); queryInput.setSelection(queryInput.length()); submitQuery(); });
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, dp(38));
+            params.setMarginEnd(dp(8));
+            hot.addView(chip, params);
+        }
+    }
     private void startMediaDownload(MediaItem item, String type) {
-        if (!isActive()) return;
+        if (!isActive() || item == null) return;
         if (item.url.isEmpty()) { toast("The media link is missing. Search or detect it again."); return; }
-        String quality = getSharedPreferences("moonix_settings", MODE_PRIVATE).getString("quality", "720");
+        DownloadOptionsSheet.show(SearchActivity.this, item, type,
+                (selectedItem, selectedType, quality, filename, directory) -> {
+                    if (!isActive() || selectedItem == null) return;
+                    startSelectedDownload(selectedItem, selectedType, quality, filename, directory);
+                });
+    }
+    private void startSelectedDownload(MediaItem item, String type, String quality, String filename, String directory) {
         setState("Starting authorized " + type + " download…", true);
         ApiClient.startDownload(this, item.url, type, quality, new ApiClient.Callback() {
             @Override public void onSuccess(JSONObject response) {
@@ -179,15 +242,13 @@ public class SearchActivity extends AppCompatActivity {
                 String jobId = response.optString("jobId", "");
                 if (jobId.isEmpty()) { setState("API did not return a download job ID.", false); return; }
                 setState("Download queued · checking progress…", true);
-                pollJob(jobId, item.title, type, 0);
+                pollJob(jobId, filename, type, directory, 0);
             }
-            @Override public void onError(String message) {
-                if (isActive()) setState("Could not start download: " + message, false);
-            }
+            @Override public void onError(String message) { if (isActive()) setState("Could not start download: " + message, false); }
         });
     }
 
-    private void pollJob(String jobId, String title, String type, int attempt) {
+    private void pollJob(String jobId, String title, String type, String directory, int attempt) {
         if (!isActive()) return;
         ApiClient.status(this, jobId, new ApiClient.Callback() {
             @Override public void onSuccess(JSONObject response) {
@@ -197,23 +258,23 @@ public class SearchActivity extends AppCompatActivity {
                 if ("completed".equalsIgnoreCase(state)) {
                     String fileUrl = response.optString("downloadUrl", "");
                     if (fileUrl.isEmpty()) { setState("The API completed the job but did not return a file link.", false); return; }
-                    queueFile(fileUrl, title, type);
+                    queueFile(fileUrl, title, type, directory);
                     return;
                 }
                 int progress = response.optInt("progress", -1);
                 setState(progress >= 0 ? "Download " + state + "… " + progress + "%" : "Download " + state + "…", true);
-                if (attempt < 100) handler.postDelayed(() -> pollJob(jobId, title, type, attempt + 1), 3000);
+                if (attempt < 100) handler.postDelayed(() -> pollJob(jobId, title, type, directory, attempt + 1), 3000);
                 else setState("Still processing. Check Android Downloads later.", false);
             }
             @Override public void onError(String message) {
                 if (!isActive()) return;
-                if (attempt < 100) handler.postDelayed(() -> pollJob(jobId, title, type, attempt + 1), 4000);
+                if (attempt < 100) handler.postDelayed(() -> pollJob(jobId, title, type, directory, attempt + 1), 4000);
                 else setState("Could not read job status: " + message, false);
             }
         });
     }
 
-    private void queueFile(String fileUrl, String title, String type) {
+    private void queueFile(String fileUrl, String title, String type, String directory) {
         if (!isActive()) return;
         try {
             Uri uri = Uri.parse(fileUrl);
@@ -222,7 +283,7 @@ public class SearchActivity extends AppCompatActivity {
             SharedPreferences prefs = getSharedPreferences("moonix_settings", MODE_PRIVATE);
             DownloadManager.Request request = new DownloadManager.Request(uri);
             request.setTitle("Moonix · " + safeFileName(title));
-            request.setDescription("Saving " + type + " to " + prefs.getString("download_location", "Downloads"));
+            request.setDescription("Saving " + type + " to " + directory);
             request.setNotificationVisibility(prefs.getBoolean("notify_complete", true)
                     ? DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED : DownloadManager.Request.VISIBILITY_VISIBLE);
             request.setAllowedOverMetered(!prefs.getBoolean("wifi_only", false));
@@ -231,7 +292,7 @@ public class SearchActivity extends AppCompatActivity {
             if (!key.isEmpty()) request.addRequestHeader("x-api-key", key);
             boolean audio = "audio".equals(type);
             request.setMimeType(audio ? "audio/mpeg" : "video/mp4");
-            String dir = "Movies".equalsIgnoreCase(prefs.getString("download_location", "Downloads")) ? Environment.DIRECTORY_MOVIES : Environment.DIRECTORY_DOWNLOADS;
+            String dir = "Movies".equalsIgnoreCase(directory) ? Environment.DIRECTORY_MOVIES : Environment.DIRECTORY_DOWNLOADS;
             request.setDestinationInExternalPublicDir(dir, safeFileName(title) + (audio ? ".mp3" : ".mp4"));
             long id = ((DownloadManager) getSystemService(DOWNLOAD_SERVICE)).enqueue(request);
             setState("Android Download Manager is saving your file (ID " + id + ").", false);

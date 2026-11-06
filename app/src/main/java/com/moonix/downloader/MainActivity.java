@@ -34,6 +34,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -66,10 +68,14 @@ public class MainActivity extends AppCompatActivity {
     private final ArrayDeque<DownloadTask> pendingDownloads = new ArrayDeque<>();
     private int activeDownloads = 0;
     private boolean filesAudio = false;
+    private boolean filesDownloads = false;
+    private boolean openFilesDownloadsNext = false;
     private boolean browserScreenOpen = false;
-    private boolean returnFromDownloads = false;
     private boolean activityDestroyed = false;
     private HomeFeedAdapter homeFeedAdapter;
+    private MyFilesAdapter myFilesAdapter;
+    private TextView filesSummary;
+    private View filesRoot;
 
     private static final class DownloadTask {
         final String label;
@@ -82,24 +88,32 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         contentFrame = findViewById(R.id.content_frame);
         navigation = findViewById(R.id.bottom_navigation);
-        ImageButton settings = findViewById(R.id.toolbar_settings);
-        settings.setOnClickListener(v -> navigation.setSelectedItemId(R.id.nav_profile));
+        View root = findViewById(R.id.root_container);
+        int navLeft = navigation.getPaddingLeft();
+        int navTop = navigation.getPaddingTop();
+        int navRight = navigation.getPaddingRight();
+        ViewCompat.setOnApplyWindowInsetsListener(root, (view, windowInsets) -> {
+            androidx.core.graphics.Insets bars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            view.setPadding(0, bars.top, 0, 0);
+            navigation.setPadding(navLeft, navTop, navRight, bars.bottom);
+            return windowInsets;
+        });
+        ViewCompat.requestApplyInsets(root);
         navigation.setOnItemSelectedListener(item -> {
             showTab(item.getItemId());
             return true;
         });
-        navigation.setOnItemReselectedListener(item -> {
-            if (browserScreenOpen) showTab(item.getItemId());
-        });
+        navigation.setOnItemReselectedListener(item -> showTab(item.getItemId()));
         navigation.setSelectedItemId(R.id.nav_home);
         requestNotificationsIfNeeded();
     }
 
     @Override protected void onResume() {
         super.onResume();
-        if (returnFromDownloads && navigation != null) {
-            returnFromDownloads = false;
-            navigation.setSelectedItemId(R.id.nav_home);
+        if (navigation != null && navigation.getSelectedItemId() == R.id.nav_files && myFilesAdapter != null) {
+            if (filesDownloads || ContextCompat.checkSelfPermission(this, permissionForFiles()) == PackageManager.PERMISSION_GRANTED) {
+                showFilesContents();
+            }
         }
     }
 
@@ -120,11 +134,10 @@ public class MainActivity extends AppCompatActivity {
         contentFrame.animate().alpha(1f).translationY(0f).setDuration(190).start();
         if (tabId == R.id.nav_home) {
             showHomeScreen();
-        } else if (tabId == R.id.nav_download) {
-            returnFromDownloads = true;
-            startActivity(new Intent(this, DownloadsActivity.class));
-        } else if (tabId == R.id.nav_movies) {
-            showSearchScreen("Movies", "Search movies, view details, and choose a download quality.", "Search movies");
+        } else if (tabId == R.id.nav_shorts) {
+            showShortsScreen();
+        } else if (tabId == R.id.nav_games) {
+            showGamesScreen();
         } else if (tabId == R.id.nav_files) {
             showFilesScreen();
         } else if (tabId == R.id.nav_profile) {
@@ -133,6 +146,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showHomeScreen() {
+        showHomeScreen("popular videos", "Popular videos", R.id.home_filter_all);
+    }
+
+    private void showShortsScreen() {
+        showHomeScreen("popular youtube shorts", "Popular Shorts", R.id.home_filter_videos);
+    }
+
+    private void showHomeScreen(String query, String heading, int selectedFilter) {
         View view = LayoutInflater.from(this).inflate(R.layout.screen_home, contentFrame, false);
         contentFrame.removeAllViews();
         contentFrame.addView(view);
@@ -141,6 +162,12 @@ public class MainActivity extends AppCompatActivity {
         view.findViewById(R.id.home_search_bar).setOnClickListener(v -> {
             tapFeedback(v);
             startActivity(new Intent(this, SearchActivity.class));
+        });
+        view.findViewById(R.id.home_shortcut_profile).setOnClickListener(v -> navigation.setSelectedItemId(R.id.nav_profile));
+        view.findViewById(R.id.home_shortcut_apps).setOnClickListener(v -> navigation.setSelectedItemId(R.id.nav_games));
+        view.findViewById(R.id.home_shortcut_files).setOnClickListener(v -> {
+            openFilesDownloadsNext = true;
+            navigation.setSelectedItemId(R.id.nav_files);
         });
         view.findViewById(R.id.home_network_settings).setOnClickListener(v -> {
             try { startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS)); }
@@ -151,7 +178,7 @@ public class MainActivity extends AppCompatActivity {
         view.findViewById(R.id.home_youtube).setOnClickListener(v ->
                 startActivity(new Intent(this, SearchActivity.class)
                         .putExtra(SearchActivity.EXTRA_INITIAL_QUERY, "popular videos")));
-        view.findViewById(R.id.home_tiktok).setOnClickListener(v -> openExternal("https://www.tiktok.com/"));
+        view.findViewById(R.id.home_whatsapp).setOnClickListener(v -> openExternal("https://www.whatsapp.com/"));
         view.findViewById(R.id.home_facebook).setOnClickListener(v -> openExternal("https://www.facebook.com/"));
         view.findViewById(R.id.home_instagram).setOnClickListener(v -> openExternal("https://www.instagram.com/"));
         view.findViewById(R.id.home_sites).setOnClickListener(v -> showBrowserScreen());
@@ -161,37 +188,58 @@ public class MainActivity extends AppCompatActivity {
         TextView feedSource = view.findViewById(R.id.home_feed_source);
         RecyclerView feedList = view.findViewById(R.id.home_feed_list);
         feedList.setLayoutManager(new LinearLayoutManager(this));
+        feedList.setNestedScrollingEnabled(false);
         homeFeedAdapter = new HomeFeedAdapter(new HomeFeedAdapter.Actions() {
             @Override public void onPlay(MediaItem item) {
-                if (item.url.isEmpty()) toast("This result does not include a playable YouTube link.");
-                else openExternal(item.url);
+                openVideoInMoonix(item);
             }
-            @Override public void onDownload(MediaItem item) { beginDownload(item, "video"); }
+            @Override public void onDownload(MediaItem item) { showDownloadOptions(item, "video"); }
         });
         HomeFeedAdapter adapter = homeFeedAdapter;
         feedList.setAdapter(adapter);
 
-        Runnable showPopularVideos = () -> {
-            selectHomeFilter(view, R.id.home_filter_all);
-            feedTitle.setText("Popular videos");
-            feedSource.setText("YouTube search results");
-            loadHomeFeed("popular videos", adapter, feedStatus);
-        };
-        view.findViewById(R.id.home_filter_all).setOnClickListener(v -> showPopularVideos.run());
+        view.findViewById(R.id.home_filter_all).setOnClickListener(v ->
+                showHomeQuery(view, R.id.home_filter_all, "popular videos", "Popular videos", adapter, feedTitle, feedSource, feedStatus));
         view.findViewById(R.id.home_filter_videos).setOnClickListener(v -> {
-            selectHomeFilter(view, R.id.home_filter_videos);
-            feedTitle.setText("Popular videos");
-            feedSource.setText("YouTube search results");
-            loadHomeFeed("popular videos", adapter, feedStatus);
+            showHomeQuery(view, R.id.home_filter_videos, "popular youtube shorts", "Popular Shorts", adapter, feedTitle, feedSource, feedStatus);
+        });
+        view.findViewById(R.id.home_filter_subscriptions).setOnClickListener(v -> {
+            selectHomeFilter(view, R.id.home_filter_subscriptions);
+            adapter.submit(new ArrayList<>());
+            feedTitle.setText("Subscriptions");
+            feedSource.setText("YouTube account not connected");
+            feedStatus.setText("Connect a YouTube account to view personal subscriptions. Public search results are available from Home.");
         });
         view.findViewById(R.id.home_filter_music).setOnClickListener(v -> {
-            selectHomeFilter(view, R.id.home_filter_music);
-            feedTitle.setText("Popular music");
-            feedSource.setText("YouTube search results");
-            loadHomeFeed("popular music videos", adapter, feedStatus);
+            showHomeQuery(view, R.id.home_filter_music, "popular music videos", "Popular music", adapter, feedTitle, feedSource, feedStatus);
         });
-        view.findViewById(R.id.home_filter_movies).setOnClickListener(v -> navigation.setSelectedItemId(R.id.nav_movies));
-        showPopularVideos.run();
+        view.findViewById(R.id.home_filter_movies).setOnClickListener(v -> {
+            showSearchScreen("Movies", "Search movies, view details, and choose a download quality.", "Search movies");
+            View back = contentFrame.findViewById(R.id.screen_back);
+            if (back != null) back.setVisibility(View.VISIBLE);
+        });
+        showHomeQuery(view, selectedFilter, query, heading, adapter, feedTitle, feedSource, feedStatus);
+    }
+
+    private void showHomeQuery(View homeView, int filterId, String query, String heading,
+                               HomeFeedAdapter adapter, TextView title, TextView source, TextView status) {
+        selectHomeFilter(homeView, filterId);
+        title.setText(heading);
+        source.setText("YouTube search results");
+        loadHomeFeed(query, adapter, status);
+    }
+
+    private void showGamesScreen() {
+        View view = LayoutInflater.from(this).inflate(R.layout.screen_games, contentFrame, false);
+        contentFrame.removeAllViews();
+        contentFrame.addView(view);
+        int[] ids = {R.id.game_subway, R.id.game_minecraft, R.id.game_freefire, R.id.game_roblox};
+        String[] queries = {"Subway Surfers gameplay", "Minecraft gameplay", "Free Fire gameplay", "Roblox gameplay"};
+        for (int i = 0; i < ids.length; i++) {
+            final String query = queries[i];
+            view.findViewById(ids[i]).setOnClickListener(v -> startActivity(new Intent(this, SearchActivity.class)
+                    .putExtra(SearchActivity.EXTRA_INITIAL_QUERY, query)));
+        }
     }
 
     private boolean hasNetworkConnection() {
@@ -207,7 +255,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void selectHomeFilter(View homeView, int selectedId) {
-        int[] ids = {R.id.home_filter_all, R.id.home_filter_videos, R.id.home_filter_music};
+        int[] ids = {R.id.home_filter_all, R.id.home_filter_videos, R.id.home_filter_subscriptions,
+                R.id.home_filter_music, R.id.home_filter_movies};
         for (int id : ids) {
             MaterialButton button = homeView.findViewById(id);
             boolean selected = id == selectedId;
@@ -239,6 +288,28 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void openVideoInMoonix(MediaItem item) {
+        if (item == null) return;
+        if (item.local) {
+            openMediaFile(item.url, item.title, false);
+            return;
+        }
+        if (item.id.isEmpty() && item.url.isEmpty()) {
+            toast("This result does not include a playable YouTube link.");
+            return;
+        }
+        Intent intent = new Intent(this, VideoPlayerActivity.class);
+        intent.putExtra(PlaybackContract.EXTRA_TITLE, item.title);
+        intent.putExtra(PlaybackContract.EXTRA_VIDEO_ID, item.id);
+        intent.putExtra(PlaybackContract.EXTRA_CREATOR, item.creator);
+        intent.putExtra(PlaybackContract.EXTRA_THUMBNAIL, item.thumbnail);
+        intent.putExtra(PlaybackContract.EXTRA_DURATION, item.duration);
+        intent.putExtra(PlaybackContract.EXTRA_VIEWS, item.views);
+        intent.putExtra(PlaybackContract.EXTRA_PUBLISHED, item.published);
+        intent.putExtra(PlaybackContract.EXTRA_URI, item.url);
+        startActivity(intent);
+    }
+
     private void openExternal(String address) {
         try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(address))); }
         catch (Exception e) { toast("No app is available to open this link."); }
@@ -249,6 +320,11 @@ public class MainActivity extends AppCompatActivity {
         View view = LayoutInflater.from(this).inflate(R.layout.screen_search, contentFrame, false);
         contentFrame.removeAllViews();
         contentFrame.addView(view);
+        View back = view.findViewById(R.id.screen_back);
+        if (back != null) {
+            back.setVisibility(movieSearch ? View.VISIBLE : View.GONE);
+            back.setOnClickListener(v -> navigation.setSelectedItemId(R.id.nav_home));
+        }
         ((TextView) view.findViewById(R.id.screen_title)).setText(title);
         ((TextView) view.findViewById(R.id.screen_subtitle)).setText(subtitle);
         TextInputEditText input = view.findViewById(R.id.input_query);
@@ -441,15 +517,26 @@ public class MainActivity extends AppCompatActivity {
             openLocalFile(item);
             return;
         }
+        showDownloadOptions(item, type);
+    }
+
+    private void showDownloadOptions(MediaItem item, String type) {
+        if (item == null || item.url.isEmpty()) {
+            toast("The media link is missing. Detect the link again.");
+            return;
+        }
+        DownloadOptionsSheet.show(this, item, type, (selectedItem, selectedType, quality, filename, directory) -> {
+            if (selectedItem == null) return;
+            confirmAndEnqueueDownload(filename + " · " + selectedType,
+                    () -> startVdlDownload(selectedItem, selectedType, quality, filename, directory));
+        });
+    }
+
+    private void startVdlDownload(MediaItem item, String type, String quality, String filename, String directory) {
         if (item.url.isEmpty()) {
             toast("The media link is missing. Detect the link again.");
             return;
         }
-        String quality = getSharedPreferences("moonix_settings", MODE_PRIVATE).getString("quality", "720");
-        confirmAndEnqueueDownload(item.title + " · " + type, () -> startVdlDownload(item, type, quality));
-    }
-
-    private void startVdlDownload(MediaItem item, String type, String quality) {
         if (activeStatus != null) {
             setSearchAnimation(false);
             showStatus(activeStatus, "Starting authorized " + type + " download…", true);
@@ -462,8 +549,8 @@ public class MainActivity extends AppCompatActivity {
                     finishDownloadTask();
                     return;
                 }
-                updateStatus("Download job " + id + " queued. Checking progress…");
-                pollJob(id, item.title, type, 0, MainActivity.this::finishDownloadTask);
+                    updateStatus("Download job " + id + " queued. Checking progress…");
+                    pollJob(id, filename, type, directory, 0, MainActivity.this::finishDownloadTask);
             }
             @Override public void onError(String message) {
                 updateStatus("Could not start download: " + message);
@@ -598,7 +685,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void pollJob(String jobId, String title, String type, int attempt, Runnable onFinished) {
+    private void pollJob(String jobId, String title, String type, String directory, int attempt, Runnable onFinished) {
         if (activityDestroyed) { onFinished.run(); return; }
         ApiClient.status(this, jobId, new ApiClient.Callback() {
             @Override public void onSuccess(JSONObject response) {
@@ -615,20 +702,20 @@ public class MainActivity extends AppCompatActivity {
                         onFinished.run();
                         return;
                     }
-                    queueFile(fileUrl, title, type, onFinished);
+                    queueFile(fileUrl, title, type, directory, onFinished);
                     updateStatus("Ready · Android Download Manager is saving the file.");
                     return;
                 }
                 int progress = response.optInt("progress", -1);
                 updateStatus(progress >= 0 ? "Download " + state + "… " + progress + "%" : "Download " + state + "…");
-                if (attempt < 100) handler.postDelayed(() -> pollJob(jobId, title, type, attempt + 1, onFinished), 3000);
+                if (attempt < 100) handler.postDelayed(() -> pollJob(jobId, title, type, directory, attempt + 1, onFinished), 3000);
                 else {
                     updateStatus("Still processing. Check the Downloads tab later.");
                     onFinished.run();
                 }
             }
             @Override public void onError(String message) {
-                if (attempt < 100) handler.postDelayed(() -> pollJob(jobId, title, type, attempt + 1, onFinished), 4000);
+                if (attempt < 100) handler.postDelayed(() -> pollJob(jobId, title, type, directory, attempt + 1, onFinished), 4000);
                 else {
                     updateStatus("Could not read job status: " + message);
                     onFinished.run();
@@ -637,14 +724,15 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void queueFile(String fileUrl, String title, String type, Runnable onFinished) {
+    private void queueFile(String fileUrl, String title, String type, String directory, Runnable onFinished) {
         try {
             Uri uri = Uri.parse(fileUrl);
             if (uri.getScheme() == null) uri = Uri.parse(ApiClient.baseUrl(this) + (fileUrl.startsWith("/") ? "" : "/") + fileUrl);
             DownloadManager manager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
             DownloadManager.Request request = new DownloadManager.Request(uri);
-            request.setTitle("Moonix · " + safeFileName(title));
-            request.setDescription("Saving " + type + " to " + getSharedPreferences("moonix_settings", MODE_PRIVATE).getString("download_location", "Downloads"));
+            String safeTitle = safeFileName(title);
+            request.setTitle("Moonix · " + safeTitle);
+            request.setDescription("Saving " + type + " to " + directory);
             request.setNotificationVisibility(notificationVisibility());
             SharedPreferences prefs = getSharedPreferences("moonix_settings", MODE_PRIVATE);
             request.setAllowedOverMetered(!prefs.getBoolean("wifi_only", false));
@@ -653,7 +741,9 @@ public class MainActivity extends AppCompatActivity {
             if (!key.isEmpty()) request.addRequestHeader("x-api-key", key);
             String ext = "audio".equals(type) ? ".mp3" : ".mp4";
             request.setMimeType("audio".equals(type) ? "audio/mpeg" : "video/mp4");
-            request.setDestinationInExternalPublicDir(downloadDirectory(), safeFileName(title) + ext);
+            String targetDirectory = "Movies".equalsIgnoreCase(directory)
+                    ? Environment.DIRECTORY_MOVIES : Environment.DIRECTORY_DOWNLOADS;
+            request.setDestinationInExternalPublicDir(targetDirectory, safeTitle + ext);
             long downloadId = manager.enqueue(request);
             monitorDownload(downloadId, title, onFinished);
         } catch (Exception e) {
@@ -714,7 +804,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateStatus(String message) {
         if (activeStatus != null) showStatus(activeStatus, message, false);
-        else toast(message);
+        else {
+            String lower = message == null ? "" : message.toLowerCase(Locale.ROOT);
+            if (lower.contains("queued") || lower.contains("ready") || lower.contains("complete")
+                    || lower.contains("failed") || lower.contains("could not") || lower.contains("did not")
+                    || lower.contains("no direct") || lower.contains("still processing")) toast(message);
+        }
     }
 
     private void showStatus(TextView view, String message, boolean loading) {
@@ -783,18 +878,52 @@ public class MainActivity extends AppCompatActivity {
         View view = LayoutInflater.from(this).inflate(R.layout.screen_files, contentFrame, false);
         contentFrame.removeAllViews();
         contentFrame.addView(view);
+        filesRoot = view;
+        filesDownloads = openFilesDownloadsNext;
+        openFilesDownloadsNext = false;
+        filesAudio = false;
+        filesSummary = view.findViewById(R.id.storage_summary);
         RecyclerView list = view.findViewById(R.id.files_list);
         list.setLayoutManager(new LinearLayoutManager(this));
-        TextView summary = view.findViewById(R.id.storage_summary);
-        MediaAdapter adapter = new MediaAdapter(new MediaAdapter.Actions() {
-            @Override public void onVideo(MediaItem item) { openLocalFile(item); }
-            @Override public void onAudio(MediaItem item) { openLocalFile(item); }
-            @Override public void onDetails(MediaItem item) { showMovieDetails(item); }
+        myFilesAdapter = new MyFilesAdapter(new MyFilesAdapter.Actions() {
+            @Override public void onOpen(MyFilesAdapter.Entry entry) {
+                if (entry.isLocalMedia()) {
+                    openMediaFile(entry.mediaItem.url, entry.title, entry.mimeType.startsWith("audio/"));
+                } else if (entry.contentUri != null && entry.status == DownloadManager.STATUS_SUCCESSFUL) {
+                    String type = entry.mimeType.toLowerCase(Locale.ROOT);
+                    boolean audio = type.startsWith("audio/") || entry.title.matches("(?i).*\\.(mp3|m4a|aac|wav|ogg|flac)$");
+                    openMediaFile(entry.contentUri.toString(), entry.title, audio);
+                } else {
+                    toast("This download is not complete yet.");
+                }
+            }
+            @Override public void onCancel(MyFilesAdapter.Entry entry) {
+                try {
+                    ((DownloadManager) getSystemService(DOWNLOAD_SERVICE)).remove(entry.downloadId);
+                    showFilesContents();
+                } catch (Exception e) { toast("Could not cancel this download."); }
+            }
         });
-        list.setAdapter(adapter);
-        view.findViewById(R.id.files_videos).setOnClickListener(v -> { filesAudio = false; loadLocalFiles(adapter, summary); });
-        view.findViewById(R.id.files_audio).setOnClickListener(v -> { filesAudio = true; loadLocalFiles(adapter, summary); });
-        loadLocalFiles(adapter, summary);
+        list.setAdapter(myFilesAdapter);
+        view.findViewById(R.id.files_videos).setOnClickListener(v -> { filesDownloads = false; filesAudio = false; showFilesContents(); });
+        view.findViewById(R.id.files_audio).setOnClickListener(v -> { filesDownloads = false; filesAudio = true; showFilesContents(); });
+        view.findViewById(R.id.files_downloads).setOnClickListener(v -> { filesDownloads = true; showFilesContents(); });
+        showFilesContents();
+    }
+
+    private void showFilesContents() {
+        if (filesRoot == null || myFilesAdapter == null || filesSummary == null) return;
+        int selectedId = filesDownloads ? R.id.files_downloads : (filesAudio ? R.id.files_audio : R.id.files_videos);
+        int[] ids = {R.id.files_videos, R.id.files_audio, R.id.files_downloads};
+        for (int id : ids) {
+            MaterialButton button = filesRoot.findViewById(id);
+            boolean selected = id == selectedId;
+            button.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
+                    ContextCompat.getColor(this, selected ? R.color.moonix_navy : R.color.moonix_white)));
+            button.setTextColor(ContextCompat.getColor(this, selected ? R.color.moonix_white : R.color.moonix_navy));
+        }
+        if (filesDownloads) loadDownloadManagerFiles(myFilesAdapter, filesSummary);
+        else loadLocalFiles(myFilesAdapter, filesSummary);
     }
 
     private String permissionForFiles() {
@@ -802,7 +931,7 @@ public class MainActivity extends AppCompatActivity {
         return Manifest.permission.READ_EXTERNAL_STORAGE;
     }
 
-    private void loadLocalFiles(MediaAdapter adapter, TextView summary) {
+    private void loadLocalFiles(MyFilesAdapter adapter, TextView summary) {
         String permission = permissionForFiles();
         if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
             summary.setText("Allow Moonix to read device media to show your local files.");
@@ -820,7 +949,7 @@ public class MainActivity extends AppCompatActivity {
         }
         String[] projection = {MediaStore.MediaColumns._ID, MediaStore.MediaColumns.DISPLAY_NAME,
                 MediaStore.MediaColumns.TITLE, MediaStore.MediaColumns.DURATION};
-        List<MediaItem> items = new ArrayList<>();
+        List<MyFilesAdapter.Entry> items = new ArrayList<>();
         try (Cursor cursor = getContentResolver().query(collection, projection, null, null,
                 MediaStore.MediaColumns.DATE_ADDED + " DESC")) {
             if (cursor != null) {
@@ -836,7 +965,7 @@ public class MainActivity extends AppCompatActivity {
                     long durationMs = durationCol >= 0 ? cursor.getLong(durationCol) : 0;
                     String duration = durationMs > 0 ? formatDuration(durationMs / 1000) : "";
                     Uri itemUri = ContentUris.withAppendedId(collection, id);
-                    items.add(MediaItem.local(title, duration, itemUri));
+                    items.add(MyFilesAdapter.Entry.fromMedia(MediaItem.local(title, duration, itemUri), filesAudio));
                 }
             }
         } catch (Exception e) {
@@ -844,8 +973,63 @@ public class MainActivity extends AppCompatActivity {
             adapter.submit(new ArrayList<>());
             return;
         }
-        summary.setText(items.size() + (filesAudio ? " audio files on this device" : " videos on this device"));
+        summary.setText(items.size() + (filesAudio ? " music files on this device" : " videos on this device"));
         adapter.submit(items);
+    }
+
+    private void loadDownloadManagerFiles(MyFilesAdapter adapter, TextView summary) {
+        DownloadManager manager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+        List<MyFilesAdapter.Entry> entries = new ArrayList<>();
+        if (manager == null) {
+            summary.setText("Android Downloads is unavailable.");
+            adapter.submit(entries);
+            return;
+        }
+        try (Cursor cursor = manager.query(new DownloadManager.Query())) {
+            if (cursor != null) {
+                int idColumn = cursor.getColumnIndex(DownloadManager.COLUMN_ID);
+                int statusColumn = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS);
+                int titleColumn = cursor.getColumnIndex(DownloadManager.COLUMN_TITLE);
+                int mimeColumn = cursor.getColumnIndex(DownloadManager.COLUMN_MEDIA_TYPE);
+                int downloadedColumn = cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR);
+                int totalColumn = cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES);
+                int localUriColumn = cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI);
+                while (cursor.moveToNext()) {
+                    long id = idColumn >= 0 ? cursor.getLong(idColumn) : -1L;
+                    int status = statusColumn >= 0 ? cursor.getInt(statusColumn) : -1;
+                    String title = titleColumn >= 0 ? cursor.getString(titleColumn) : "Download";
+                    if (title != null && title.startsWith("Moonix · ")) title = title.substring("Moonix · ".length());
+                    String mime = mimeColumn >= 0 ? cursor.getString(mimeColumn) : "";
+                    long downloaded = downloadedColumn >= 0 ? cursor.getLong(downloadedColumn) : 0L;
+                    long total = totalColumn >= 0 ? cursor.getLong(totalColumn) : -1L;
+                    Uri contentUri = null;
+                    if (status == DownloadManager.STATUS_SUCCESSFUL && id >= 0) {
+                        try { contentUri = manager.getUriForDownloadedFile(id); } catch (RuntimeException ignored) { }
+                    }
+                    if (contentUri == null && localUriColumn >= 0) {
+                        String local = cursor.getString(localUriColumn);
+                        if (local != null && !local.trim().isEmpty()) {
+                            try { contentUri = Uri.parse(local); } catch (RuntimeException ignored) { }
+                        }
+                    }
+                    entries.add(MyFilesAdapter.Entry.fromDownload(id, status, downloaded, total, mime,
+                            contentUri, title == null ? "Download" : title));
+                }
+            }
+        } catch (Exception e) {
+            summary.setText("Could not read Android Downloads: " + e.getMessage());
+            adapter.submit(new ArrayList<>());
+            return;
+        }
+        int active = 0;
+        int completed = 0;
+        for (MyFilesAdapter.Entry entry : entries) {
+            if (entry.status == DownloadManager.STATUS_PENDING || entry.status == DownloadManager.STATUS_RUNNING
+                    || entry.status == DownloadManager.STATUS_PAUSED) active++;
+            if (entry.status == DownloadManager.STATUS_SUCCESSFUL) completed++;
+        }
+        summary.setText(entries.size() + " downloads · " + active + " pending · " + completed + " complete");
+        adapter.submit(entries);
     }
 
     private String formatDuration(long seconds) {
@@ -855,10 +1039,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void openLocalFile(MediaItem item) {
+        openMediaFile(item.url, item.title, filesAudio);
+    }
+
+    private void openMediaFile(String uri, String title, boolean audio) {
         try {
-            Intent intent = new Intent(this, filesAudio ? MusicPlayerActivity.class : VideoPlayerActivity.class);
-            intent.putExtra(PlaybackContract.EXTRA_URI, item.url);
-            intent.putExtra(PlaybackContract.EXTRA_TITLE, item.title);
+            Intent intent = new Intent(this, audio ? MusicPlayerActivity.class : VideoPlayerActivity.class);
+            intent.putExtra(PlaybackContract.EXTRA_URI, uri);
+            intent.putExtra(PlaybackContract.EXTRA_TITLE, title);
             startActivity(intent);
         } catch (Exception e) { toast("Could not open this media file."); }
     }
@@ -954,10 +1142,9 @@ public class MainActivity extends AppCompatActivity {
 
     @Override public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_MEDIA_PERMISSION && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            showFilesScreen();
-        } else if (requestCode == REQUEST_MEDIA_PERMISSION) {
-            toast("Media permission was not granted.");
+        if (requestCode == REQUEST_MEDIA_PERMISSION && filesSummary != null) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) showFilesContents();
+            else filesSummary.setText("Media permission was denied. Allow it in Android Settings to browse device files.");
         }
     }
 

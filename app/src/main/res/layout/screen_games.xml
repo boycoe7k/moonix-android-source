@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/moonix_grey"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Game"
+            android:textColor="@color/moonix_navy"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Explore game videos and open them in Moonix."
+            android:textColor="@color/moonix_muted"
+            android:textSize="13sp" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            app:cardBackgroundColor="@color/moonix_white"
+            app:cardCornerRadius="18dp"
+            app:cardElevation="1dp"
+            app:strokeColor="@color/moonix_line"
+            app:strokeWidth="1dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Hot Games"
+                    android:textColor="@color/moonix_navy"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Choose a topic to search YouTube results."
+                    android:textColor="@color/moonix_muted"
+                    android:textSize="12sp" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/game_subway"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="12dp"
+                    android:text="Subway Surfers"
+                    android:textAllCaps="false"
+                    android:gravity="start|center_vertical"
+                    app:icon="@drawable/icon_nav_game"
+                    app:iconTint="@color/moonix_navy" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/game_minecraft"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="7dp"
+                    android:text="Minecraft"
+                    android:textAllCaps="false"
+                    android:gravity="start|center_vertical"
+                    app:icon="@drawable/icon_nav_game"
+                    app:iconTint="@color/moonix_navy" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/game_freefire"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="7dp"
+                    android:text="Free Fire"
+                    android:textAllCaps="false"
+                    android:gravity="start|center_vertical"
+                    app:icon="@drawable/icon_nav_game"
+                    app:iconTint="@color/moonix_navy" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/game_roblox"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="7dp"
+                    android:text="Roblox"
+                    android:textAllCaps="false"
+                    android:gravity="start|center_vertical"
+                    app:icon="@drawable/icon_nav_game"
+                    app:iconTint="@color/moonix_navy" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
+</ScrollView>

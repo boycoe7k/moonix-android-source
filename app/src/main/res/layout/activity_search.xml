@@ -4,100 +4,92 @@
     android:layout_height="match_parent"
     android:background="@color/moonix_grey"
     android:orientation="vertical">
-
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:background="@color/moonix_white"
+        android:layout_height="64dp"
         android:gravity="center_vertical"
-        android:elevation="2dp"
         android:orientation="horizontal"
         android:paddingStart="8dp"
-        android:paddingEnd="16dp">
+        android:paddingEnd="12dp">
         <ImageButton
             android:id="@+id/search_back"
-            android:layout_width="48dp"
+            android:layout_width="44dp"
             android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Back"
-            android:src="@android:drawable/ic_media_previous"
+            android:src="@drawable/icon_previous"
             app:tint="@color/moonix_navy" />
-        <TextView
-            android:layout_width="wrap_content"
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="Moonix Search"
-            android:textColor="@color/moonix_navy"
-            android:textSize="19sp"
+            android:layout_weight="1"
+            app:boxBackgroundColor="@color/moonix_white"
+            app:boxBackgroundMode="filled"
+            app:boxCornerRadiusBottomEnd="28dp"
+            app:boxCornerRadiusBottomStart="28dp"
+            app:boxCornerRadiusTopEnd="28dp"
+            app:boxCornerRadiusTopStart="28dp">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/search_query_input"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:hint="Search videos or paste a link"
+                android:imeOptions="actionSearch"
+                android:inputType="textUri"
+                android:maxLines="1"
+                android:paddingStart="16dp"
+                android:paddingEnd="12dp"
+                android:textColor="@color/moonix_navy"
+                android:textSize="14sp" />
+        </com.google.android.material.textfield.TextInputLayout>
+        <TextView
+            android:id="@+id/search_submit"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:gravity="center"
+            android:paddingStart="12dp"
+            android:paddingEnd="8dp"
+            android:text="ENTER"
+            android:textColor="@color/moonix_pink"
+            android:textSize="13sp"
             android:textStyle="bold" />
     </LinearLayout>
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:paddingStart="16dp"
-        android:paddingTop="14dp"
         android:paddingEnd="16dp">
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Search YouTube or paste a supported link."
-            android:textColor="@color/moonix_muted"
-            android:textSize="13sp" />
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
-            <com.google.android.material.textfield.TextInputLayout
+            <TextView
+                android:id="@+id/search_history_title"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:hint="Search or paste a link"
-                app:boxBackgroundMode="outline"
-                app:boxCornerRadiusBottomEnd="14dp"
-                app:boxCornerRadiusBottomStart="14dp"
-                app:boxCornerRadiusTopEnd="14dp"
-                app:boxCornerRadiusTopStart="14dp">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/search_query_input"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:imeOptions="actionSearch"
-                    android:inputType="textUri"
-                    android:maxLines="1"
-                    android:textColor="@color/moonix_navy"
-                    android:textSize="14sp" />
-            </com.google.android.material.textfield.TextInputLayout>
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/search_submit"
+                android:text="Recent searches"
+                android:textColor="@color/moonix_navy"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+            <TextView
+                android:id="@+id/search_clear_history"
                 android:layout_width="wrap_content"
-                android:layout_height="54dp"
-                android:layout_marginStart="8dp"
-                android:minWidth="0dp"
-                android:text="Search"
-                android:textAllCaps="false"
-                app:backgroundTint="@color/moonix_pink"
-                app:cornerRadius="14dp" />
+                android:layout_height="40dp"
+                android:gravity="center"
+                android:paddingStart="10dp"
+                android:text="Clear history"
+                android:textColor="@color/moonix_muted"
+                android:textSize="12sp"
+                android:visibility="gone" />
         </LinearLayout>
-        <TextView
-            android:id="@+id/search_history_title"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Recent searches"
-            android:textColor="@color/moonix_navy"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:visibility="gone" />
         <HorizontalScrollView
             android:id="@+id/search_history_scroll"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:fillViewport="false"
             android:scrollbars="none"
             android:visibility="gone">
             <LinearLayout
@@ -106,6 +98,48 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal" />
         </HorizontalScrollView>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="Hot Searches"
+            android:textColor="@color/moonix_navy"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:scrollbars="none">
+            <LinearLayout
+                android:id="@+id/search_hot_items"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" />
+        </HorizontalScrollView>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="13dp"
+            android:background="@color/moonix_white"
+            android:elevation="1dp"
+            android:orientation="vertical"
+            android:padding="14dp">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Hot Games"
+                android:textColor="@color/moonix_navy"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Discover gaming videos, walkthroughs and highlights with the searches above."
+                android:textColor="@color/moonix_muted"
+                android:textSize="13sp" />
+        </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -115,8 +149,8 @@
             <ProgressBar
                 android:id="@+id/search_loading"
                 style="?android:attr/progressBarStyleSmall"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
                 android:indeterminateTint="@color/moonix_pink"
                 android:visibility="gone" />
             <TextView
@@ -127,12 +161,11 @@
                 android:paddingStart="8dp"
                 android:paddingTop="5dp"
                 android:paddingBottom="6dp"
-                android:text="Search or paste a link to begin."
+                android:text="Search or paste a supported link to begin."
                 android:textColor="@color/moonix_muted"
                 android:textSize="12sp" />
         </LinearLayout>
     </LinearLayout>
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/search_results"
         android:layout_width="match_parent"
