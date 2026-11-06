@@ -318,12 +318,6 @@ public class VideoPlayerActivity extends AppCompatActivity {
         return result.length() > 120 ? result.substring(0, 120).trim() : result;
     }
 
-    private void showYoutubeFallback(String message) {
-        TextView fallback = findViewById(R.id.youtube_fallback);
-        fallback.setText(message);
-        fallback.setVisibility(View.VISIBLE);
-    }
-
     @Override protected void onPause() {
         super.onPause();
         if (videoView != null && videoView.isPlaying()) videoView.pause();
