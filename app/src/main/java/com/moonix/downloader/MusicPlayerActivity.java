@@ -150,7 +150,7 @@ public class MusicPlayerActivity extends AppCompatActivity {
         } catch (RuntimeException ignored) {
             // Keep the supplied title, metadata placeholders, and icon_audio cover fallback.
         } finally {
-            try { retriever.release(); } catch (RuntimeException ignored) { }
+            try { retriever.release(); } catch (Exception ignored) { }
         }
     }
 
